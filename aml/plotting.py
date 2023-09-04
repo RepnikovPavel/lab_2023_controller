@@ -47,7 +47,6 @@ def plot_float_distribution(data,fig_size=(4,3),title=''):
     return fig,ax
 
 def bar_plot(objects, heights, fig_size=(4,3),title=''):
-    fig,ax = plt.subplots()
     fig, ax = plt.subplots()
     fig.set_size_inches(*fig_size)
     ax.bar(objects, heights)
@@ -101,6 +100,7 @@ def plot_to_image(figure):
     figure.savefig(buf, format='png')
     # Closing the figure prevents it from being displayed directly inside
     # the notebook.
+    plt.close(figure)
     buf.seek(0)
     # Convert PNG buffer to TF image
     image = tf.image.decode_png(buf.getvalue(), channels=4)
@@ -136,6 +136,6 @@ class TensorBoard:
     def Push(self, experiment_metadata,  x, y, label):
         with self.LabelWriter[experiment_metadata].as_default():
             tf.summary.scalar(label, data = y , step = x)
-    def PlotImage(self,experiment_metadata, img, label):
+    def PlotImage(self,experiment_metadata, img, label,step=0):
         with self.LabelWriter[experiment_metadata].as_default():
-            tf.summary.image(label, img, step=0)
+            tf.summary.image(label, img, step=step)
