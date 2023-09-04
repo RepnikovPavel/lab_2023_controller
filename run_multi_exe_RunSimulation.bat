@@ -1,0 +1,16 @@
+start /affinity 1 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 0
+start /affinity 2 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 1
+start /affinity 4 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 2
+start /affinity 8 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 3
+start /affinity 16 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 4
+start /affinity 32 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 5
+start /affinity 64 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 6
+start /affinity 128 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 7
+start /affinity 256 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 8
+start /affinity 512 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 9
+start /affinity 1024 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 10
+start /affinity 2048 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 11
+start /affinity 4096 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 12
+start /affinity 8192 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 13
+start /affinity 16384 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 14
+start /affinity 32768 C:\Python3\Python_3_10_6\venvs\lab\Scripts\python.exe C:/Users/User/PycharmProjects/lab_2023/simulate_all_examples.py 15
