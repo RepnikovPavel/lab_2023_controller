@@ -928,7 +928,8 @@ class Distrib3D:
     midy: np.float32
     midz: np.float32
     values: np.array
-    def __init__(self, grid:List[np.array], values:np.array):
+    volumes: np.array
+    def __init__(self, grid:List[np.array], values:np.array, volumes: np.array):
         # grid: index of dimension, index of point on grid 
         self.grid = grid 
         self.values = values
@@ -952,6 +953,7 @@ class Distrib3D:
         self.midx = midx
         self.midy = midy
         self.midz = midz
+        self.volumes = volumes
 
     def __call__(self, x_1:float,x_2:float,x_3:float)->float:
         i_x = get_index_of_segment_by_value(x_1, self.grid[0])        
@@ -967,23 +969,34 @@ class Distrib3D:
         i_y = get_index_of_segment_by_value(x_2, self.grid[1])   
         if i_x == -1 or i_y == -1:
             return np.nan
-        values_ = self.values[i_x][i_y]
-        grid_ = self.grid[2]
-        return 0.5*values_*np.diff(np.square(grid_))
+        
+        zgrid = self.grid[2]
+        vs = self.values[i_x][i_y]
+        delta = np.diff(zgrid)
+        p_xyz =  vs
+        p_xy  =  np.sum(vs*delta)
+        cond_probs = p_xyz/p_xy
+        return np.sum(0.5*cond_probs* np.diff(np.square(zgrid)))
+    
     def random_choice(self, x_1:float,x_2:float)->float:
         i_x = get_index_of_segment_by_value(x_1, self.grid[0])        
         i_y = get_index_of_segment_by_value(x_2, self.grid[1])   
         if i_x == -1 or i_y == -1:
             return np.nan
-        values_ = self.values[i_x][i_y]/np.sum(self.values[i_x][i_y])
-        mids_ = self.midz
-        return np.random.choice(mids_,p=values_)
+        zgrid = self.grid[2]
+        vs = self.values[i_x][i_y]
+        delta = np.diff(zgrid)
+        p_xyz =  vs
+        p_xy  =  np.sum(vs*delta)
+        cond_probs = p_xyz/p_xy
+        probs_of_discrete_values = cond_probs*delta
+        return np.random.choice(self.midz,p=probs_of_discrete_values)
     
 
 def cup_grids(grids:List[List[np.array]]) -> List[np.array]:
-    x_grids = grids[:,0]
-    y_grids = grids[:,1]
-    z_grids = grids[:,2]
+    x_grids = [el[0] for el in grids]
+    y_grids = [el[1] for el in grids]
+    z_grids = [el[2] for el in grids]
     x_flatten = []
     for xgr in x_grids:
         for j in range(len(xgr)):
@@ -1008,9 +1021,16 @@ def cup_grids(grids:List[List[np.array]]) -> List[np.array]:
 
 def weighted_amount_in_point(x_1, x_2, x_3, distributions:List[Distrib3D], alpha_vec:np.array):
     sum_ = 0.0
+    # print(alpha_vec)
+    # vs = []
     for i in range(len(distributions)):
         p_ = distributions[i]
         sum_ += alpha_vec[i]*p_(x_1, x_2, x_3)
+        # vs.append(p_(x_1, x_2, x_3))
+    # print(vs)
+    # print(np.sum(vs))
+    # raise SystemExit
+    # print(sum_)
     return sum_
 
 
@@ -1024,18 +1044,140 @@ def make_distrib_from_weighted_sum_of_distributions(distributions:List[Distrib3D
     xgrid = Grid[0]
     ygrid = Grid[1]
     zgrid = Grid[2]
+    Volumes = compute_volumes_from_grid(Grid)
     for i in range(nx):
         for j in range(ny):
             for k in range(nz):
                 x_mid = (xgrid[i]+xgrid[i+1])*0.5 
-                y_mid = (ygrid[i]+ygrid[i+1])*0.5 
-                z_mid = (zgrid[i]+zgrid[i+1])*0.5 
+                y_mid = (ygrid[j]+ygrid[j+1])*0.5 
+                z_mid = (zgrid[k]+zgrid[k+1])*0.5 
                 Values[i][j][k] = weighted_amount_in_point(x_mid,
                                                            y_mid,
                                                            z_mid,
                                                            distributions,
                                                            alpha_vec) 
-    return Distrib3D(Grid,Values)
+    Values = Values/np.sum(Values*Volumes)
+    return Distrib3D(Grid,Values,Volumes)
+
+def compute_volumes_from_grid(grid):
+    xgrid,ygrid,zgrid = grid
+    nx = len(xgrid)-1
+    ny = len(ygrid)-1
+    nz = len(zgrid)-1
+    volumes = np.zeros(shape=(nx,ny,nz),dtype=np.float32)
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                v_ = (xgrid[i+1]-xgrid[i])*(ygrid[j+1]-ygrid[j])*(zgrid[k+1]-zgrid[k])
+                volumes[i][j][k] = v_
+    return volumes
+
+def build_distrib3d_from_policy_matrix(p_from_policy_matrix,
+                                       xgrid,ygrid,zgrid,number_of_states,number_of_actions):
+    grid = [xgrid,ygrid,zgrid]
+    nx = len(xgrid)-1
+    ny = len(ygrid)-1
+    nz = len(zgrid)-1
+    values = np.zeros(shape=(nx,ny,nz),dtype=np.float32)
+    volumes = compute_volumes_from_grid(grid)
+    for i in range(nx):
+        x_mid = (xgrid[i]+xgrid[i+1])*0.5
+        deltax =  xgrid[i+1]-xgrid[i]
+        for j in range(ny):
+            y_mid = (ygrid[j]+ygrid[j+1])*0.5 
+            deltay=  ygrid[j+1]-ygrid[j]
+            for k in range(nz):
+                z_mid = (zgrid[k]+zgrid[k+1])*0.5
+                deltaz = zgrid[k+1]-zgrid[k]
+                v_ = deltax*deltay*deltaz
+                values[i][j][k] = p_from_policy_matrix(x_mid,y_mid,z_mid)*(1.0/number_of_states)/volumes[i][j][k]
+    values = values/np.sum(values*volumes)
+    # print(volumes)
+    p_ = Distrib3D(grid,values,volumes)
+    return p_
+
+
+
+
+def build_p_from_policy_matrix(PI,N1,N2,M,xgrid,ygrid,zgrid):
+    '''
+    returns cond probs p(a|theta,omega)
+    '''
+    def p_(x1:float,x2:float,y1:float)->float:
+        k1 = get_index_of_segment_by_value(x1, xgrid)
+        k2 = get_index_of_segment_by_value(x2, ygrid)
+        i_ = N2*k1+k2 # index of row
+        k3 = get_index_of_segment_by_value(y1,zgrid) # index of column
+        return PI[i_][k3]
+    return p_
+
+def convert_segments_grid_to_grid(segments_grid):
+    # index of dim, index of segment, index of point in segment
+    xsegments= segments_grid[0]
+    ysegments= segments_grid[1]
+    zsegments= segments_grid[2]
+    xgrid = []
+    for i in range(len(xsegments)):
+        xgrid.append(xsegments[i][0])
+        xgrid.append(xsegments[i][1])
+    xgrid = np.array(
+        np.unique(xgrid),dtype=np.float32
+    )
+    ygrid = []
+    for i in range(len(ysegments)):
+        ygrid.append(ysegments[i][0])
+        ygrid.append(ysegments[i][1])
+    ygrid = np.array(
+        np.unique(ygrid),dtype=np.float32
+    )
+    zgrid = []
+    for i in range(len(zsegments)):
+        zgrid.append(zsegments[i][0])
+        zgrid.append(zsegments[i][1])
+    zgrid = np.array(
+        np.unique(zgrid),dtype=np.float32
+    )
+    return [xgrid,ygrid,zgrid]
+
+def plot_func_on_grid(func, x1grid,x2grid,xlabel=r"$\theta, \: V$",ylabel=r'$\omega, \: V$',title=r'$F, \: V $',size=(16,9)):
+    fig,ax = plt.subplots()
+    fig.set_size_inches(*size)
+
+    x = []
+    y = []
+    rects_info = []
+    highs = []
+    num_of_points_in_plot = 0
+    # в этом случае передали surf
+    for i in range(len(x1grid)-1):
+        for j in range(len(x2grid)-1):
+            x_1 = x1grid[i]
+            x_2 = x1grid[i+1]
+            y_1 = x2grid[j]
+            y_2 = x2grid[j+1]
+            x.append((x_2 + x_1) / 2)
+            y.append((y_2 + y_1) / 2)
+            rects_info.append([x_1, x_2, y_1, y_2])
+            expectation = func((x_2 + x_1) / 2, (y_2 + y_1) / 2)
+            # print(expectation)
+            highs.append(expectation)
+            num_of_points_in_plot += 1
+    norm = matplotlib.colors.Normalize(vmin=min(highs), vmax=max(highs))
+    m = cm.ScalarMappable(norm=norm, cmap=cm.viridis)
+    tmp_len = len(rects_info)
+    for i in range(len(rects_info)):
+        print("\r interation {} of {}".format(i, tmp_len), end='')
+        plot_rect(ax, rects_info[i][0], rects_info[i][1], rects_info[i][2], rects_info[i][3],
+                    m.to_rgba(highs[i]))
+
+    plt.colorbar(m, ax=ax)
+    ax.set_xlim([-1.0, 1.0])
+    ax.set_ylim([-1.0, 1.0])
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    return fig,ax  
+
 
 
 
