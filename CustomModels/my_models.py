@@ -912,6 +912,134 @@ class Distrib4D:
     def __call__(self, xi_eta_list, gamma):
         return self.__compute_z(self.z_list, self.np_omega, xi_eta_list, gamma)
 
+@jit(nopython = True)
+def get_index_of_segment_by_value(x:float, grid:np.array):
+    N = len(grid)
+    if x < grid[0] or x > grid[N-1]:
+        return -1 
+    for i in range(N-2):
+        if x >= grid[i] and x < grid[i+1]:
+            return i
+    return N-2
+
+class Distrib3D:
+    grid: List[np.array]
+    midx: np.float32
+    midy: np.float32
+    midz: np.float32
+    values: np.array
+    def __init__(self, grid:List[np.array], values:np.array):
+        # grid: index of dimension, index of point on grid 
+        self.grid = grid 
+        self.values = values
+        midx= []
+        gx = grid[0]
+        for i in range(len(gx)-1):
+            midx.append(0.5*(gx[i]+gx[i+1])) 
+
+        midy= []
+        gy = grid[1]
+        for i in range(len(gy)-1):
+            midy.append(0.5*(gy[i]+gy[i+1])) 
+
+        midz= []
+        gz = grid[2]
+        for i in range(len(gz)-1):
+            midz.append(0.5*(gz[i]+gz[i+1])) 
+        midx = np.array(midx, dtype=np.float32)
+        midy = np.array(midy, dtype=np.float32) 
+        midz = np.array(midz, dtype=np.float32) 
+        self.midx = midx
+        self.midy = midy
+        self.midz = midz
+
+    def __call__(self, x_1:float,x_2:float,x_3:float)->float:
+        i_x = get_index_of_segment_by_value(x_1, self.grid[0])        
+        i_y = get_index_of_segment_by_value(x_2, self.grid[1])        
+        i_z = get_index_of_segment_by_value(x_3, self.grid[2])
+        if i_x == -1 or i_y == -1 or i_z == -1:
+            return 0.0
+        else:
+            return self.values[i_x][i_y][i_z]
+    def math_expectation(self, x_1:float,x_2:float)->float:
+        # out: math expectation of x_3 at (x_1,x_2) point
+        i_x = get_index_of_segment_by_value(x_1, self.grid[0])        
+        i_y = get_index_of_segment_by_value(x_2, self.grid[1])   
+        if i_x == -1 or i_y == -1:
+            return np.nan
+        values_ = self.values[i_x][i_y]
+        grid_ = self.grid[2]
+        return 0.5*values_*np.diff(np.square(grid_))
+    def random_choice(self, x_1:float,x_2:float)->float:
+        i_x = get_index_of_segment_by_value(x_1, self.grid[0])        
+        i_y = get_index_of_segment_by_value(x_2, self.grid[1])   
+        if i_x == -1 or i_y == -1:
+            return np.nan
+        values_ = self.values[i_x][i_y]/np.sum(self.values[i_x][i_y])
+        mids_ = self.midz
+        return np.random.choice(mids_,p=values_)
+    
+
+def cup_grids(grids:List[List[np.array]]) -> List[np.array]:
+    x_grids = grids[:,0]
+    y_grids = grids[:,1]
+    z_grids = grids[:,2]
+    x_flatten = []
+    for xgr in x_grids:
+        for j in range(len(xgr)):
+            x_flatten.append(xgr[j])
+    x_flatten = np.unique(x_flatten)
+    x_superposition = np.sort(x_flatten)
+
+    y_flatten = []
+    for ygr in y_grids:
+        for j in range(len(ygr)):
+            y_flatten.append(ygr[j])
+    y_flatten = np.unique(y_flatten)
+    y_superposition = np.sort(y_flatten)
+
+    z_flatten = []
+    for zgr in z_grids:
+        for j in range(len(zgr)):
+            z_flatten.append(zgr[j])
+    z_flatten = np.unique(z_flatten)
+    z_superposition = np.sort(z_flatten)
+    return [x_superposition, y_superposition, z_superposition]
+
+def weighted_amount_in_point(x_1, x_2, x_3, distributions:List[Distrib3D], alpha_vec:np.array):
+    sum_ = 0.0
+    for i in range(len(distributions)):
+        p_ = distributions[i]
+        sum_ += alpha_vec[i]*p_(x_1, x_2, x_3)
+    return sum_
+
+
+def make_distrib_from_weighted_sum_of_distributions(distributions:List[Distrib3D],alpha_vec:np.array):
+    grids = [distributions[i].grid for i in range(len(distributions))]
+    Grid = cup_grids(grids)
+    nx  = len(Grid[0])-1
+    ny = len(Grid[1])-1
+    nz = len(Grid[2])-1
+    Values = np.zeros(shape=(nx, ny, nz),dtype=np.float32)
+    xgrid = Grid[0]
+    ygrid = Grid[1]
+    zgrid = Grid[2]
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                x_mid = (xgrid[i]+xgrid[i+1])*0.5 
+                y_mid = (ygrid[i]+ygrid[i+1])*0.5 
+                z_mid = (zgrid[i]+zgrid[i+1])*0.5 
+                Values[i][j][k] = weighted_amount_in_point(x_mid,
+                                                           y_mid,
+                                                           z_mid,
+                                                           distributions,
+                                                           alpha_vec) 
+    return Distrib3D(Grid,Values)
+
+
+
+
 
 def weighted_amount(list_of_distributions: List[Distrib4D], alpha_list: np.array):
     # TODO : процедура интегрирвоания ни как не проверялась
