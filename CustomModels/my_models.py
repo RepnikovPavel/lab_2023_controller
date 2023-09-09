@@ -990,6 +990,8 @@ class Distrib3D:
         p_xy  =  np.sum(vs*delta)
         cond_probs = p_xyz/p_xy
         probs_of_discrete_values = cond_probs*delta
+        # for numeric stabilization
+        probs_of_discrete_values = probs_of_discrete_values/np.sum(probs_of_discrete_values)
         return np.random.choice(self.midz,p=probs_of_discrete_values)
     
 
@@ -1092,7 +1094,6 @@ def build_distrib3d_from_policy_matrix(p_from_policy_matrix,
                 v_ = deltax*deltay*deltaz
                 values[i][j][k] = p_from_policy_matrix(x_mid,y_mid,z_mid)*(1.0/number_of_states)/volumes[i][j][k]
     values = values/np.sum(values*volumes)
-    # print(volumes)
     p_ = Distrib3D(grid,values,volumes)
     return p_
 
@@ -1177,6 +1178,24 @@ def plot_func_on_grid(func, x1grid,x2grid,xlabel=r"$\theta, \: V$",ylabel=r'$\om
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     return fig,ax  
+
+
+def save_curve2d_to_latex_format(filename,curve):
+    o_ = ''
+    for j in range(len(curve)):
+        o_ += str(curve[j][0]) + '\t' + str(curve[j][1]) + '\n'
+    with open(filename,'w') as file:
+        file.write(o_)
+
+def save_trs_to_latex_format(directory, trs):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    for i in range(len(trs)):
+        tr = trs[i]
+        filename = 'tr_'+str(i)+'.dat'
+        save_curve2d_to_latex_format(os.path.join(directory,filename), tr)
+
 
 
 
