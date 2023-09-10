@@ -14,6 +14,8 @@ tensorboard_path = r'C:\Python3\ml\Scripts\tensorboard.exe'
 task_dir = r'C:\paper_data'
 p_0_for_mixture_path = os.path.join(task_dir, 'p0_for_mixture.txt')
 rules_cache_dir = os.path.join(task_dir,'rules_cache_dir')
+Phi_cache_dir = os.path.join(task_dir,'Phi_cache_dir')
+
 
 random_decent_best_filepath = os.path.join(task_dir, 'random_decs_best.txt')
 inc_random_dec_file_path = os.path.join(task_dir, 'inc_random_decs_best.txt')

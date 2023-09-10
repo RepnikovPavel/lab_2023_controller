@@ -252,7 +252,7 @@ class ModelGenerator:
                                                                      is_approx=is_approx)
         return random_seed
 
-    def CreateModelFromScratch(self, is_approx,gr_steps,lr=0.01):
+    def CreateModelFromScratch(self, is_approx,gr_steps,lr=0.01,print_tmp_cons_and_loss=True):
         random_seed = self.make_new_seed(is_approx)
         a, h, f, coeff_list = self.shared_data['ahfcoeff_list']
         t_omega = self.shared_data['t_omega']
@@ -282,7 +282,7 @@ class ModelGenerator:
             plot_gradien_loss=False,
             plot_consystency=False,
             print_num_of_restart_gradient=False,
-            print_tmp_cons_and_loss=True
+            print_tmp_cons_and_loss=print_tmp_cons_and_loss
         )
 
         return z_list
