@@ -880,44 +880,18 @@ def get_sim_results(simulation, phys_sim_params, plot_tr_params, units_translato
 
 
     times_of_sim = []
-    last_y = []
-    last_v = []
-    last_a = []
-    last_th = []
-    last_omega = []
-    all_th = []
-    all_omega = []
-
     n_bad = 0
     n_good = 0
     n_early_stopped = 0
     markers = []
     tau = phys_sim_params['tau']
+    solutions = []
     for i in range(n_x_for_sim):
-        # print('\n номер точки вдоль оси X: {}/{}'.format(i,n_x_for_sim), end='\n')
         for j in range(n_y_for_sim):
-            # th = from_th_in_si_to_th_in_volt(th_for_mul_sim[i])
-            # om = from_omega_in_si_to_omega_in_volt(omega_for_mul_sim[j])
-            # if not (-0.5<=th<=0.5):
-            #     continue
-            # if th < -0.25 and om < -0.25:
-            #     continue
-            # if th > 0.25 and om > 0.25:
-            #     continue
-
             code_of_sim, solution, time_of_simulation, control_actions = simulation(th_for_mul_sim[i],
                                                                                     omega_for_mul_sim[j],
                                                                                     y_0, v_0)
-            last_y.append(solution[-1][2])
-            last_v.append(solution[-1][3])
-            last_th.append(solution[-1][0])
-            last_omega.append(solution[-1][1])
-            all_th.append(solution[:, 0])
-            all_omega.append(solution[:, 1])
-            # time_window_size = 1.0
-            # window_size = int(np.floor(time_window_size / tau))
-            # a_vec = calc_a_vec(solution[-window_size:,3], tau)
-            # last_a.append(WMA(a_vec))
+            solutions.append(solution)
 
             times_of_sim.append(time_of_simulation)
             if code_of_sim == 0:
@@ -935,13 +909,7 @@ def get_sim_results(simulation, phys_sim_params, plot_tr_params, units_translato
         'n_bad': n_bad,
         'n_early': n_early_stopped,
         'markers': markers,
-        'last_y': last_y,
-        'last_v': last_v,
-        'all_th': all_th,
-        'all_omega': all_omega, 
-        # 'last_a': last_a,
-        'last_th': last_th,
-        'last_omega': last_omega,
+        'solutions': solutions,
         'times': times_of_sim
     }
 

@@ -15,6 +15,9 @@ task_dir = r'C:\paper_data'
 p_0_for_mixture_path = os.path.join(task_dir, 'p0_for_mixture.txt')
 rules_cache_dir = os.path.join(task_dir,'rules_cache_dir')
 Phi_cache_dir = os.path.join(task_dir,'Phi_cache_dir')
+Phi_adj_matrix = os.path.join(task_dir,'Phi_adj_m.txt')
+Phi_vector_representation = os.path.join(task_dir, 'Phi_vectors.txt')
+Phi_loss1 = os.path.join(task_dir, 'Phi_qualityv1.txt')
 
 
 random_decent_best_filepath = os.path.join(task_dir, 'random_decs_best.txt')
@@ -73,6 +76,13 @@ plot_trajectories_params = {
     'n_x_for_sim': 20,  # число стартовых точек для симуляции
     'n_y_for_sim': 20,  # число стартовых точек для симуляции
 }
+descent_start_points_params = {
+    'x_1_range': [-0.9, 0.9],
+    'x_2_range': [-0.9, 0.9],
+    'n_x_for_sim': 10,  # число стартовых точек для симуляции
+    'n_y_for_sim': 10,  # число стартовых точек для симуляции
+}
+
 # plot_trajectories_params = {
 #     'x_1_range': [-0.9, 0.9],
 #     'x_2_range': [-0.9, 0.9],
