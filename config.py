@@ -92,7 +92,7 @@ descent_start_points_params = {
 
 phys_sim_params = {
     't_0': 0,  # in si начало одной симуляции
-    't_end': 15,  # in si конец одной симуляции
+    't_end': 3,  # in si конец одной симуляции
     'tau': 0.01,  # in si шаг по времени в симуляции
     'v_0': 0.0,  # in si
     'y_0': 0.0  # in si,

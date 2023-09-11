@@ -43,6 +43,7 @@ if __name__ == '__main__':
             adj_matrix[j][i] = ro_12
             k_ += 1
             print('\r{}/{}\t{}%'.format(k_+1, int(N*(N-1)/2),(k_+1)/(N*(N-1)/2)*100),end='')
+    print('')
     torch.save(adj_matrix, config.Phi_adj_matrix)
     timer.stop()
     print(timer.get_execution_time()/60)
