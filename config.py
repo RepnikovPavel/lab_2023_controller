@@ -18,6 +18,8 @@ Phi_cache_dir = os.path.join(task_dir,'Phi_cache_dir')
 Phi_adj_matrix = os.path.join(task_dir,'Phi_adj_m.txt')
 Phi_vector_representation = os.path.join(task_dir, 'Phi_vectors.txt')
 Phi_loss1 = os.path.join(task_dir, 'Phi_qualityv1.txt')
+Phi_descent_best_p_path = os.path.join(task_dir, 'Phi_descent_best_p.txt')
+
 
 
 random_decent_best_filepath = os.path.join(task_dir, 'random_decs_best.txt')

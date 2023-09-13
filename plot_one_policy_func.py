@@ -108,7 +108,8 @@ if __name__ == '__main__':
     # p_xi_eta_gamma = torch.load(config.inc_p0)
     # insert_noise_to_p(p_xi_eta_gamma,mask_of_noisy_rules=config.mask_for_rules_for_noise,shared_data=shared_data)
 
-    p_xi_eta_gamma = torch.load(config.inc_random_dec_file_path)
+    # p_xi_eta_gamma = torch.load(config.inc_random_dec_file_path)
+    p_xi_eta_gamma = torch.load(config.Phi_descent_best_p_path)
     # p_xi_eta_gamma = torch.load(config.inc_p0)
     # indexes_to_modify = np.concatenate([np.arange(start = 13, stop=35, dtype=np.uint32),
     #                                    np.array([2,9,37,44,3,10,38,45,4,11,39,46],dtype=np.uint32)])
@@ -170,6 +171,7 @@ if __name__ == '__main__':
                       plot_tr_params=sym_params_,
                       units_translators=config.translators_units_of_measurement,
                       make_animation=False)
+    plt.show()
     # start_time = time.time()
     #
     # stop_time =  time.time()
