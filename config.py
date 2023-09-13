@@ -110,8 +110,8 @@ phys_sim_params = {
 fuzzy_inf_params = {
     'num_of_points_in_fuzzy_inf': 100,
     'th_max': 0.2617993877991494,  # in si диапазон параметра
+    'F_max': 20,  # in si диапазон параметра
     # 'F_max': 10,  # in si диапазон параметра
-    'F_max': 10,  # in si диапазон параметра
     'omega_max': 3  # in si диапазон параметра
 }
 

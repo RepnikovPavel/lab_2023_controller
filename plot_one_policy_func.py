@@ -98,10 +98,11 @@ if __name__ == '__main__':
     # L_best = all_values[argmin]
     # p_xi_eta_gamma = all_p[best_name]
 
-    shared_data = ModelGenerator(rules=config.incomplete_rules,
-                                 cache_dir=config.incomplete_rules_cache_dir,
-                                 clear_cache=False).shared_data
-    shared_integration_supports = Integrator(dir_=config.incomplete_rules_integrator_dir,
+    mg=  ModelGenerator(rules=config.incomplete_rules,
+                                 cache_dir=config.Phi_cache_dir,
+                                 clear_cache=False)
+    shared_data = mg.shared_data
+    shared_integration_supports = Integrator(dir_=config.Phi_cache_dir,
                                              shared_data=shared_data,
                                              clear_cache=False).shared_integration_supports
 
@@ -109,7 +110,12 @@ if __name__ == '__main__':
     # insert_noise_to_p(p_xi_eta_gamma,mask_of_noisy_rules=config.mask_for_rules_for_noise,shared_data=shared_data)
 
     # p_xi_eta_gamma = torch.load(config.inc_random_dec_file_path)
-    p_xi_eta_gamma = torch.load(config.Phi_descent_best_p_path)
+    # p_xi_eta_gamma = torch.load(config.Phi_descent_best_p_path)
+
+    N = 1000
+    all_p = [torch.load(os.path.join(mg.cache_dir, 'distrib4D_{}.txt'.format(i))) for i in range(N)]
+    p_xi_eta_gamma = all_p[150]
+
     # p_xi_eta_gamma = torch.load(config.inc_p0)
     # indexes_to_modify = np.concatenate([np.arange(start = 13, stop=35, dtype=np.uint32),
     #                                    np.array([2,9,37,44,3,10,38,45,4,11,39,46],dtype=np.uint32)])

@@ -5,6 +5,7 @@ from CustomModels.my_models import *
 from Alg.solving_algorithm import ModelGenerator
 import config
 from Simulation.sim_supp import make_psi, make_simulation_for_one_policy_function
+from general import WMA
 
 @jit(nopython = True)
 def minusReward(solution:np.array,rho_max:float,tau:float,t_end:float)->float:
@@ -103,8 +104,10 @@ def get_L2_Distrib4D(p_: Distrib4D, shared_integration_supports):
     for i in range(len(solutions)):
         s_i = solutions[i]
         t_end = times[i]
-        L_i = np.absolute(s_i[-1,2]- s_i[0,2])
+        # L_i = np.absolute(s_i[-1,2]- s_i[0,2])
         # L_i = np.sum(minusReward(s_i,rho_max,tau,t_end))
-        Losses[i] = L_i
+        velocity_ = s_i[-10:,3]
+        mean_last_coord_velocity =  np.absolute(WMA(velocity_))
+        Losses[i] = mean_last_coord_velocity
     total_loss = np.mean(Losses)
     return total_loss

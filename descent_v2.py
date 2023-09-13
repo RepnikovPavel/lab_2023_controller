@@ -36,8 +36,11 @@ def grad_descent_from_alpha_in_simplex(alpha_vec,p_list, shared_integration_supp
         # board_reference.Push(experiment_metadata=experiment_metadata,
         #     x=n,y= L_mid, label='L')
         gradient_ = np.zeros(shape=(d,))
+        # epsilon_ = 10**(-6)
+        alpha_not_zero = alpha_n[np.argwhere(alpha_n != 0.0)]
+        alpha_min_ = np.min(alpha_not_zero)
+        epsilon_ = np.minimum(alpha_min_/2.0, 1.0/d)
         for j in range(d):
-            epsilon_ = 10**(-6)
             if alpha_n[j] < epsilon_:
                 alpha_1 = np.copy(alpha_n)
                 alpha_1[j] = alpha_1[j] + epsilon_
@@ -63,10 +66,11 @@ def grad_descent_from_alpha_in_simplex(alpha_vec,p_list, shared_integration_supp
 
             L_1 = get_L2_Distrib4D(p_1,shared_integration_supports)
             L_2 = get_L2_Distrib4D(p_2,shared_integration_supports)
+            # print(L_1,L_2, epsilon_)
             gradient_[j] = (L_1 - L_2)/(2*epsilon_)
         
 
-        lambda_vec = np.logspace(start=-1,stop=-6,num=10)
+        lambda_vec = np.logspace(start=4,stop=-4,num=10)
         lambda_best = None
         loss_current = L_mid
         ls = []
@@ -84,33 +88,33 @@ def grad_descent_from_alpha_in_simplex(alpha_vec,p_list, shared_integration_supp
             if L_after<loss_current:
                 loss_current = L_after
                 lambda_best = lambda_
-        # arg_best = np.argsort(ls)[0]
-        # left_pos = np.maximum(0, arg_best-1)
-        # right_pos = np.minimum(len(ls)-1, arg_best+1)
+        arg_best = np.argsort(ls)[0]
+        left_pos = np.maximum(0, arg_best-1)
+        right_pos = np.minimum(len(ls)-1, arg_best+1)
 
-        # left = lambda_ls[left_pos]
-        # right = lambda_ls[right_pos]
+        left = lambda_ls[left_pos]
+        right = lambda_ls[right_pos]
 
-        # lambda_vec = np.linspace(left,right,10)
-        # addls = []
-        # addlambda_ls = []
-        # for lambda_ in lambda_vec:
-        #     alpha_copy = np.copy(alpha_n)
-        #     alpha_after = alpha_copy - lambda_*gradient_
-        #     if np.sum(alpha_after < 0.0)==d:
-        #         continue
-        #     alpha_after = adjust_alpha(alpha_after)        
-        #     p_after = weighted_amount(list_of_distributions=p_list, alpha_list=alpha_after)
-        #     L_after = get_L2_Distrib4D(p_after,shared_integration_supports)
-        #     addls.append(L_after)
-        #     addlambda_ls.append(lambda_)
-        #     if L_after<loss_current:
-        #         loss_current = L_after
-        #         lambda_best = lambda_
-        # fig,ax = plt.subplots()
-        # ax.plot(lambda_ls,ls,color= 'k')
-        # ax.plot(addlambda_ls,addls,color= 'r')
-        # plt.show()
+        lambda_vec = np.linspace(left,right,10)
+        addls = []
+        addlambda_ls = []
+        for lambda_ in lambda_vec:
+            alpha_copy = np.copy(alpha_n)
+            alpha_after = alpha_copy - lambda_*gradient_
+            if np.sum(alpha_after < 0.0)==d:
+                continue
+            alpha_after = adjust_alpha(alpha_after)        
+            p_after = weighted_amount(list_of_distributions=p_list, alpha_list=alpha_after)
+            L_after = get_L2_Distrib4D(p_after,shared_integration_supports)
+            addls.append(L_after)
+            addlambda_ls.append(lambda_)
+            if L_after<loss_current:
+                loss_current = L_after
+                lambda_best = lambda_
+        fig,ax = plt.subplots()
+        ax.plot(lambda_ls,ls,color= 'k')
+        ax.plot(addlambda_ls,addls,color= 'r')
+        plt.show()
         
 
         all_losses.append(loss_current)
@@ -130,22 +134,51 @@ def grad_descent_from_alpha_in_simplex(alpha_vec,p_list, shared_integration_supp
     
     return p_mid, L_mid,all_losses, alpha_n
 
-def grad_descent(p_list, shared_integration_supports):
+def search_min_in_simplex_with_center(mid_of_simplex, simplex, p_list, shared_integration_supports):
+    pos_of_mid = np.argwhere(simplex==mid_of_siplex).flatten()[0]
     d = len(p_list)
-    alpha_mid = np.ones(shape=(d,))
-    alpha_mid = alpha_mid/np.sum(alpha_mid)
+    all_losses = []
+    eps_vec = np.linspace(0, 1.0, 10)
+    for i in range(len(simplex)):
+        print(i)
+        if mid_of_simplex == simplex[i]:
+            continue
+        loss_per_pair = []
+        for j in range(len(eps_vec)):
+            eps_= eps_vec[j]
+            p_j = weighted_amount(list_of_distributions=[p_list[pos_of_mid], p_list[i]], alpha_list=[1.0-eps_, eps_])
+            L_j = get_L2_Distrib4D(p_j, shared_integration_supports)
+            loss_per_pair.append(L_j)
+        all_losses.append(loss_per_pair)
+
+    fig,ax = plt.subplots()
+    for i in range(len(all_losses)):
+        ax.plot(eps_vec,all_losses[i],color= 'k')
+    plt.show(block=False)
+    
+
+    
+    return None,None,None
+
+def grad_descent(p_list,mid_of_siplex,simplex, shared_integration_supports):
+    d = len(p_list)
+    pos_of_mid = np.argwhere(simplex==mid_of_siplex).flatten()[0]
+    alpha_mid = np.zeros(shape=(d,))
+    alpha_mid[pos_of_mid] = 1.0
     alpha_vecs = [alpha_mid]    
-    for j in range(d):
-        alpha_ = np.zeros(shape=(d,))
-        alpha_[j] = 1.0
-        alpha_vecs.append(alpha_)
+    # alpha_vecs = [alpha_mid]    
+    # for j in range(d):
+    #     alpha_ = np.zeros(shape=(d,))
+    #     alpha_[j] = 1.0
+    #     alpha_vecs.append(alpha_)
     
     losses_vecs = []
     L_per_start_iter=[]
     P_per_start_iter=[]
     for j in range(len(alpha_vecs)):
         alpha_j = alpha_vecs[j]
-        best_p, best_L, losses_j, best_alpha = grad_descent_from_alpha_in_simplex(alpha_j,p_list, shared_integration_supports)
+        # best_p, best_L, losses_j, best_alpha = grad_descent_from_alpha_in_simplex(alpha_j,p_list, shared_integration_supports)
+        best_p, best_L, losses_j, best_alpha = search_min_in_simplex_with_center(mid_of_siplex, simplex,p_list, shared_integration_supports)
         losses_vecs.append(losses_j)
         L_per_start_iter.append(best_L)
         P_per_start_iter.append(best_p)
@@ -163,9 +196,6 @@ def grad_descent(p_list, shared_integration_supports):
     return p_best_in_simplex, L_best_in_simplex
 
      
-
-
-
 N = 1000
 
 mg = ModelGenerator(rules=config.rules,
@@ -178,13 +208,18 @@ all_v = torch.load(os.path.join(config.task_dir, 'L2_for_Phi.txt'))
 simplices = torch.load(os.path.join(config.task_dir, 'triangulation_simplexes.txt'))
 sorted_vertesices = [el for el in np.argsort(all_v)]  
 # get simliexes with best loss 
-sorted_simplixes = []
-simplexes_best = []
+# sorted_simplixes = []
+# simplexes_best = []
+simpexes_for_omptimization = []
 for best_vertex in sorted_vertesices:
+    vertex_siplixes = []
     for simplex in simplices:
         if best_vertex in  simplex:
-            sorted_simplixes.append(simplex)
-            simplexes_best.append(all_v[best_vertex])
+            vertex_siplixes.append(simplex)
+    unique_vertexes = np.unique(vertex_siplixes)
+    simpexes_for_omptimization.append(unique_vertexes)
+
+print('number of simplexes for oprimization {}'.format(len(simpexes_for_omptimization)))
 
 d = len(vectors[0])
 support_vertexes = torch.load(os.path.join(config.task_dir, 'support_points.txt'))
@@ -207,19 +242,20 @@ shared_integration_supports = Integrator(dir_=config.integrator_dir,
 
 global_L_min = 10**99
 p_best = None
-losses_per_simplex_optimization = {i:[] for i in range(len(sorted_simplixes))}
+# losses_per_simplex_optimization = {i:[] for i in range(len(sorted_simplixes))}
 # max_iter = np.maximum(int(0.005*len(sorted_simplixes)),1)
 max_iter = 200
 for i in tqdm(range(max_iter)):
     # j = np.random.randint(0, len(sorted_simplixes))
     # simplex = sorted_simplixes[j]
     # BestOfSimplex = simplexes_best[j]
-    simplex = sorted_simplixes[i]
-    BestOfSimplex = simplexes_best[i]
+    simplex = simpexes_for_omptimization[i]
+    BestOfSimplex = simpexes_for_omptimization[i]
 
     p_in_simplex = [all_p[el] for el in simplex]
+    mid_of_siplex = sorted_vertesices[i]
     # print(BestOfSimplex)
-    p_fitted, L_last = grad_descent(p_in_simplex,shared_integration_supports)
+    p_fitted, L_last = grad_descent(p_in_simplex,mid_of_siplex,simplex, shared_integration_supports)
     # losses_per_simplex_optimization[i] = all_losses
     if L_last < global_L_min:
         global_L_min = L_last

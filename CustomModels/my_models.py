@@ -122,8 +122,8 @@ class ModelTrainer:
         max_index = 5
         index_of_mean_computation = 5
 
-        N_half = int(train_dict["max_num_of_epochs"]/2)
-
+        index_of_apply_raznost = int(train_dict["max_num_of_epochs"]+100)
+        # INDEX_OF_RENORMILIZE = int(train_dict["max_num_of_epochs"]/3)
         for i in range(train_dict["max_num_of_epochs"]):
             if i in train_dict:
                 for g in optimizer.param_groups:
@@ -145,7 +145,7 @@ class ModelTrainer:
                                                                                             init_z=init_z,
                                                                                             distrib_of_rules=distrib_of_rules_torch,
                                                                                             index_of_iteration=i,
-                                                                                            index_of_apply_raznost=N_half,
+                                                                                            index_of_apply_raznost=index_of_apply_raznost,
                                                                                             max_squares=max_squares
                                                                                             )
             norm_loss = float(norm.cpu().detach().numpy())
@@ -179,9 +179,79 @@ class ModelTrainer:
                     break
             loss.backward()
             optimizer.step()
-
+        # print('')
+        # sum_ = 0.0
         for i in range(len(z)):
-            z[i] = torch.exp(z[i]).detach().numpy()
+            z[i] = torch.exp(z[i]).detach()
+            # before_= torch.sum(z[i]*a[i])
+            # sum_ += before_
+            z[i] = z[i]/torch.sum(z[i]*a[i])*distrib_of_rules[i]
+            # after_ = torch.sum(z[i]*a[i])
+            # print('before {} after {}'.format(before_,after_))
+            z[i] = z[i].clone().detach().numpy()
+        # print('sum before {}'.format(sum_))
+        # optimizer = torch.optim.Adam(z, train_dict["lr"], [0.5, 0.7])
+
+
+        # for i in range(INDEX_OF_RENORMILIZE, train_dict["max_num_of_epochs"]):
+
+        #     if i in train_dict:
+        #         for g in optimizer.param_groups:
+        #             g['lr'] = train_dict[i]["lr"]
+        #             last_lr = train_dict[i]["lr"]
+
+        #     if i > max_index:
+        #         last_mean_loss = np.mean(loss_vec[i - index_of_mean_computation:i])
+        #         last_loss = loss_vec[i - 1]
+
+        #         if last_loss < last_mean_loss * 0.9:
+        #             last_lr = last_lr * 0.99
+        #             for g in optimizer.param_groups:
+        #                 g['lr'] = last_lr
+
+        #     optimizer.zero_grad()
+        #     loss, consistency, norm, ro, ro_rules_values, distr_of_rules = self.__comp_loss(z, f, num_of_rules, a, h,
+        #                                                                                     coeff_list,
+        #                                                                                     init_z=init_z,
+        #                                                                                     distrib_of_rules=distrib_of_rules_torch,
+        #                                                                                     index_of_iteration=i,
+        #                                                                                     index_of_apply_raznost=index_of_apply_raznost,
+        #                                                                                     max_squares=max_squares
+        #                                                                                     )
+        #     norm_loss = float(norm.cpu().detach().numpy())
+        #     cons_loss = float(consistency.cpu().detach().numpy())
+        #     ro_loss = float(ro.cpu().detach().numpy())
+        #     distr_of_rules_loss = float(distr_of_rules.cpu().detach().numpy())
+
+        #     if print_tmp_cons_and_loss == True:
+        #         print(
+        #             "\r>>   {} ep lr {:10.11f} consistency: {:10.11f}   norm: {:10.11f}  ro {:10.11f} distr {:10.11f}".format(
+        #                 i, last_lr,
+        #                 cons_loss,
+        #                 norm_loss,
+        #                 ro_loss, distr_of_rules_loss
+        #             ),
+        #             end='')
+        #     loss_for_plot = float(loss.cpu().detach().numpy())
+
+        #     loss_vec[i] = loss_for_plot
+        #     consyst_vec[i] = cons_loss
+        #     norm_vec[i] = norm_loss
+
+        #     ro_vec[i] = ro_loss
+        #     distr_of_rules_vec[i] = distr_of_rules_loss
+        #     # reg_vec[i]= reg_loss
+
+        #     # if (cons_loss < 0.005 and norm_loss < 0.001 and distr_of_rules_loss < 0.001):
+        #     if check_target_values == True:
+        #         if (cons_loss < min_cons and norm_loss < min_norm and distr_of_rules_loss < min_distr):
+        #             last_index_for_plot = i
+        #             break
+        #     loss.backward()
+        #     optimizer.step()
+
+        # for i in range(len(z)):
+        #     z[i] = torch.exp(z[i]).detach().numpy()
 
         if plot_gradien_loss == True:
             fig_loss, axs_loss = plt.subplots(1, 4)
@@ -236,6 +306,7 @@ class ModelTrainer:
                                               plot_gradien_loss=plot_gradien_loss, a=a, h=h,
                                               coeff_list=coeff_list,
                                               print_tmp_cons_and_loss=print_tmp_cons_and_loss)
+            # plot_consistency(z_list, rules, omega, a, h)
             l += 1
             # if train_info["last_consistency"] < 0.7 and train_info["last_norm"] < 0.001:
             if check_target_values == True:
