@@ -21,7 +21,6 @@ Phi_loss1 = os.path.join(task_dir, 'Phi_qualityv1.txt')
 Phi_descent_best_p_path = os.path.join(task_dir, 'Phi_descent_best_p.txt')
 
 
-
 random_decent_best_filepath = os.path.join(task_dir, 'random_decs_best.txt')
 inc_random_dec_file_path = os.path.join(task_dir, 'inc_random_decs_best.txt')
 sql_files_path = './'

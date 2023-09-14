@@ -983,6 +983,14 @@ class Distrib4D:
     def __call__(self, xi_eta_list, gamma):
         return self.__compute_z(self.z_list, self.np_omega, xi_eta_list, gamma)
 
+def renormolize_distribution(p_:Distrib4D,a,new_distrib_of_rules):
+    for i in range(len(p_.z_list)):
+        # print('old norm',np.sum(a[i]*p_.z_list[i]))
+        p_.z_list[i] = p_.z_list[i]/np.sum(a[i]*p_.z_list[i])*new_distrib_of_rules[i]
+        # print('new norm',np.sum(a[i]*p_.z_list[i]))
+    return p_  
+
+
 @jit(nopython = True)
 def get_index_of_segment_by_value(x:float, grid:np.array):
     N = len(grid)

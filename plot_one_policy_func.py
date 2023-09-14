@@ -13,7 +13,7 @@ from FileSystem.general_purpose_functions import *
 from Alg.solving_algorithm import ModelGenerator
 from FileSystem.storage import PStorage, SimResultsManager
 from CustomModels.my_models import DistrMaker
-from CustomModels.my_models import Integrator
+from CustomModels.my_models import Integrator,renormolize_distribution
 import config
 from general import plot_policy_function, plot_trajectories,get_sim_results,plot_policy_function_with_trajectories
 from Simulation.sim_supp import make_psi, make_simulation_for_one_policy_function
@@ -111,10 +111,14 @@ if __name__ == '__main__':
 
     # p_xi_eta_gamma = torch.load(config.inc_random_dec_file_path)
     # p_xi_eta_gamma = torch.load(config.Phi_descent_best_p_path)
-
-    N = 1000
+    N=1000
     all_p = [torch.load(os.path.join(mg.cache_dir, 'distrib4D_{}.txt'.format(i))) for i in range(N)]
-    p_xi_eta_gamma = all_p[150]
+    nr = len(all_p[0].z_list)
+    uniform_distrib_of_rules= np.ones(shape=(nr,))/nr
+    a, h, f, coeff_list = mg.shared_data['ahfcoeff_list']
+    for i in range(N):
+        all_p[i] = renormolize_distribution(all_p[i],[a[el].detach().numpy() for el in range(len(a))],uniform_distrib_of_rules)
+    p_xi_eta_gamma = all_p[0]
 
     # p_xi_eta_gamma = torch.load(config.inc_p0)
     # indexes_to_modify = np.concatenate([np.arange(start = 13, stop=35, dtype=np.uint32),
