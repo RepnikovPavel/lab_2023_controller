@@ -116,9 +116,26 @@ if __name__ == '__main__':
     nr = len(all_p[0].z_list)
     uniform_distrib_of_rules= np.ones(shape=(nr,))/nr
     a, h, f, coeff_list = mg.shared_data['ahfcoeff_list']
+    a= [a[el].detach().numpy() for el in range(len(a))]
     for i in range(N):
-        all_p[i] = renormolize_distribution(all_p[i],[a[el].detach().numpy() for el in range(len(a))],uniform_distrib_of_rules)
-    p_xi_eta_gamma = all_p[0]
+        all_p[i] = renormolize_distribution(all_p[i],a,uniform_distrib_of_rules)
+    p_xi_eta_gamma = all_p[379]
+    alpha_ = [
+                0.0179218,  0.02384068, 0.03079365, 0.01711373, 0.0303054 , 0.01158957,
+                0.01653302, 0.02144654, 0.01060916, 0.03257249, 0.00106394, 0.02350237,
+                0.03501373, 0.03329102, 0.00978481, 0.00106394, 0.00106394, 0.00106394,
+                0.00106394, 0.03608664, 0.01993977, 0.01853709, 0.00106394, 0.00106394,
+                0.1373914,  0.00106394, 0.01246237, 0.01952362, 0.01698077, 0.01596703,
+                0.05169667, 0.02264178, 0.00106394, 0.02539518, 0.01851736, 0.02746313,
+                0.02853972, 0.03834083, 0.01366103, 0.00106394, 0.01850521, 0.00195201,
+                0.02592795, 0.00711466, 0.03754382, 0.04084063, 0.00863061, 0.00958083,
+                0.02180251]
+    fig0,ax0= plt.subplots()
+    ax0.bar(x= np.arange(0,49),height=alpha_)
+    plt.show()
+
+    print('norm of alpha', np.sum(alpha_))
+    p_xi_eta_gamma = renormolize_distribution(p_xi_eta_gamma,a,alpha_)
 
     # p_xi_eta_gamma = torch.load(config.inc_p0)
     # indexes_to_modify = np.concatenate([np.arange(start = 13, stop=35, dtype=np.uint32),
@@ -149,7 +166,7 @@ if __name__ == '__main__':
     psi = make_psi(policy_func=p_func,
                    translators_units_of_measurement=config.translators_units_of_measurement)
 
-    sym_params_ =  {'x_1_range': [-0.9, 0.9], 'x_2_range': [-0.9,  0.9],  'n_x_for_sim': 20, 'n_y_for_sim': 20}
+    sym_params_ =  {'x_1_range': [-0.9, 0.9], 'x_2_range': [-0.9,  0.9],  'n_x_for_sim': 10, 'n_y_for_sim': 10}
     simulation = make_simulation_for_one_policy_function(
         psi=psi,
         phys_sim_params=config.phys_sim_params,
