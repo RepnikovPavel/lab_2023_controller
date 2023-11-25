@@ -1,6 +1,7 @@
 from typing import List
 from typing import Tuple
 
+from scipy.optimize import fmin
 import numpy as np
 from scipy.integrate import quad
 from copy import deepcopy
@@ -35,14 +36,15 @@ class Distrib:
     distrib = None
     grid: np.array
     num_of_segments: int
+    max_x: float
 
-    def __init__(self, func, supp_of_func: Tuple[float, float], num_of_segments=5):
+    def __init__(self, func, supp_of_func: Tuple[float, float], num_of_segments=5,max_x=None):
         integral = quad(func, supp_of_func[0],
                         supp_of_func[1])[0]
 
         def distr(x: float):
             return 1 / integral * func(x)
-
+        self.max_x = max_x
         self.distrib = distr
         self.support = supp_of_func
         self.num_of_segments = num_of_segments
@@ -50,5 +52,21 @@ class Distrib:
 
     def __call__(self, x: float):
         return self.distrib(x)
+
+# def FPLUS(p1,p2,new_support,num_of_segments=10):
+#     def plus(x:float):
+#         return p1(x)+p2(x)
+#     p_ = Distrib(plus,new_support,num_of_segments,max_x=)
+
+def P_MAX_MINUS_P(pmax,p,new_support,num_of_segments=10):
+    def minus(x:float):
+        return pmax-p(x)
+    p_ = Distrib(minus,new_support,num_of_segments)
+    return p_
+
+def FNOT(p: Distrib,new_support,num_of_segments):
+    p_ = P_MAX_MINUS_P(p(p.max_x), p, new_support,num_of_segments)
+    return p_
+
 
 

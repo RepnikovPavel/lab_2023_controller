@@ -292,7 +292,7 @@ def plot_policy_function(
         axs.set_title(r'$F, \: V $')
 
         print("plot response surface done")
-        return axs
+        return fig, axs
 
 def draw_arrow(axs, arr_start, arr_end):
        dx = arr_end[0] - arr_start[0]
@@ -617,6 +617,7 @@ def plot_trajectories(simulation, phys_sim_params, plot_tr_params, units_transla
     ax[0][0].set_xlabel(r'$\theta$,V')
     ax[0][0].set_ylabel(r'$\omega,V$')
 
+    fig.tight_layout(pad=0.0, w_pad=0.0, h_pad=0.0)
     n_x_for_sim = plot_tr_params['n_x_for_sim']
     n_y_for_sim = plot_tr_params['n_y_for_sim']
     x_1_range_v = plot_tr_params['x_1_range']
@@ -727,13 +728,13 @@ def plot_trajectories(simulation, phys_sim_params, plot_tr_params, units_transla
 
 
 
-    ax[0][0].set_title(
-        "n_bad={} n_good={}\nM(t)={} min={} max={} target={} sek\n".format(n_bad, n_good,
-                                                                                  str(mean_time_of_sim)[:4],
-                                                                                  str(min_time_of_sim)[:4],
-                                                                                  str(max_tim_of_sim)[:4],
-                                                                                  str(target_sim_time)[:4])
-                                                                                )
+    # ax[0][0].set_title(
+    #     "n_bad={} n_good={}\nM(t)={} min={} max={} target={} sek\n".format(n_bad, n_good,
+    #                                                                               str(mean_time_of_sim)[:4],
+    #                                                                               str(min_time_of_sim)[:4],
+    #                                                                               str(max_tim_of_sim)[:4],
+    #                                                                               str(target_sim_time)[:4])
+    #                                                                             )
 
     y_end = []
     v_end = []
@@ -773,6 +774,8 @@ def plot_trajectories(simulation, phys_sim_params, plot_tr_params, units_transla
 
 
     ax[0][1].set_title(r'$a, \frac{cm}{s^{2}}$')
+    ax[1][1].set_title(r'$v, \frac{cm}{s}$')
+    ax[1][0].set_title(r'$y, cm$')
     # ax[1][0].set_title('y, cm. worse = {} best = {}'.format(str(np.max(y_end)), str(np.min(y_end))))
     # ax[1][1].set_title('v, cm/s worse = {} best = {}'.format(str(np.max(v_end)), str(np.min(v_end))))
 
@@ -833,6 +836,142 @@ def plot_trajectories(simulation, phys_sim_params, plot_tr_params, units_transla
     # plt.show(block=True)
     return fig,ax
 
+def plot_trajectories_only(simulation, phys_sim_params, plot_tr_params, units_translators,make_animation):
+    '''
+    condition_of_break = np.asarray([
+        config.theta_range,
+        config.omega_range,
+        [-9999.0, 9999.0],
+        [-9999.0, 9999.0]
+    ])
+    psi = make_psi(policy_func=p_func,
+                   translators_units_of_measurement=config.translators_units_of_measurement)
+
+    simulation = make_simulation_for_one_policy_function(
+        psi=p_func,
+        phys_sim_params=config.phys_sim_params,
+        condition_of_break=condition_of_break,
+        object_params=config.phys_params
+    )
+    plot_trajectories(simulation=simulation,
+                      phys_sim_params=config.phys_sim_params,
+                      plot_tr_params=config.plot_trajectories_params,
+                      units_translators=config.translators_units_of_measurement)
+    '''
+    fig, ax = plt.subplots()
+    ax.set_xlabel(r'$\theta$,V')
+    ax.set_ylabel(r'$\omega,V$')
+
+    fig.tight_layout(pad=0.0, w_pad=0.0, h_pad=0.0)
+    n_x_for_sim = plot_tr_params['n_x_for_sim']
+    n_y_for_sim = plot_tr_params['n_y_for_sim']
+    x_1_range_v = plot_tr_params['x_1_range']
+    x_2_range_v = plot_tr_params['x_2_range']
+
+    y_0 = phys_sim_params['y_0']
+    v_0 = phys_sim_params['v_0']
+    t_0 = phys_sim_params['t_0']
+    t_end = phys_sim_params['t_end']
+
+    from_th_in_volt_to_th_in_si = copy.deepcopy(units_translators['from_th_in_volt_to_th_in_si'])
+    from_omega_in_volt_to_omega_in_si = copy.deepcopy(units_translators['from_omega_in_volt_to_omega_in_si'])
+    from_th_in_si_to_th_in_volt = copy.deepcopy(units_translators['from_th_in_si_to_th_in_volt'])
+    from_omega_in_si_to_omega_in_volt = copy.deepcopy(units_translators['from_omega_in_si_to_omega_in_volt'])
+
+    th_for_mul_sim = np.linspace(start=from_th_in_volt_to_th_in_si(x_1_range_v[0]),
+                                 stop=from_th_in_volt_to_th_in_si(x_1_range_v[1]),
+                                 num=n_x_for_sim)
+    omega_for_mul_sim = np.linspace(start=from_omega_in_volt_to_omega_in_si(x_2_range_v[0]),
+                                    stop=from_omega_in_volt_to_omega_in_si(x_2_range_v[1]),
+                                    num=n_y_for_sim)
+
+    sim_results = []
+    times_of_sim = []
+
+    n_bad = 0
+    n_good = 0
+    markers_for_sim_code = []
+    # start_time = time.time()
+
+    y_vecs = []
+    v_vecs = []
+    control_actions_vecs = []
+
+    start_time = time.time()
+    for i in range(n_x_for_sim):
+        print('точка по theta {}/{}'.format(i+1, n_x_for_sim))
+        for j in range(n_y_for_sim):
+            th = from_th_in_si_to_th_in_volt(th_for_mul_sim[i])
+            om = from_omega_in_si_to_omega_in_volt(omega_for_mul_sim[j])
+            # if not (-0.5<=th<=0.5):
+            #     continue
+            # if th < -0.25 and om < -0.25:
+            #     continue
+            # if th > 0.25 and om > 0.25:
+            #     continue
+            if make_animation:
+                code_of_sim, solution, time_of_simulation, control_actions = simulation(-0.13,
+                                                                                        -0.5,
+                                                                                        y_0, v_0)
+                sim_results.append(solution)
+                times_of_sim.append(time_of_simulation)
+                markers_for_sim_code.append(code_of_sim)
+                # code_of_sim == 0 - good try, 1-bad try
+                if code_of_sim == 0:
+                    n_good += 1
+                elif code_of_sim == 1:
+                    n_bad += 1
+                make_and_play_animation(solution, 60, time_of_simulation, phys_sim_params['tau'], 0.25, control_actions,
+                                        sim_results[-1],
+                                        units_translators
+                                        )
+                raise SystemExit
+            code_of_sim, solution, time_of_simulation, control_actions = simulation(th_for_mul_sim[i],
+                                                                                    omega_for_mul_sim[j],
+                                                                                    y_0, v_0)
+            # plot_vec(np.linspace(start=t_0,stop=t_end,num=len(control_actions)),control_actions,title='',block=True)
+            y_vecs.append(solution[:, 2])
+            v_vecs.append(solution[:, 3])
+            control_actions_vecs.append(control_actions)
+            sim_results.append(solution)
+            times_of_sim.append(time_of_simulation)
+            markers_for_sim_code.append(code_of_sim)
+            # code_of_sim == 0 - good try, 1-bad try
+            if code_of_sim == 0:
+                n_good += 1
+            elif code_of_sim == 1:
+                n_bad += 1
+    print(time.time()-start_time)
+
+    mean_time_of_sim = np.mean(times_of_sim)
+    min_time_of_sim = np.min(times_of_sim)
+    max_tim_of_sim = np.max(times_of_sim)
+    target_sim_time = t_end - t_0
+
+    for i in range(len(sim_results)):
+        a = np.copy(sim_results[i][:, 0])
+        b = np.copy(sim_results[i][:, 1])
+        for j in range(len(a)):
+            a[j] = from_th_in_si_to_th_in_volt(a[j])
+            b[j] = from_omega_in_si_to_omega_in_volt(b[j])
+        if markers_for_sim_code[i] == 0:
+            ax.plot(a, b, color='b', alpha=0.5)
+        if markers_for_sim_code[i] == 1:
+            ax.plot(a, b, color='r', alpha=0.5)
+        if markers_for_sim_code[i] == 2:
+            ax.plot(a, b, color='g', alpha=0.5)
+
+    for i in range(len(sim_results)):
+        val_1 = from_th_in_si_to_th_in_volt(sim_results[i][0][0])
+        val_2 = from_omega_in_si_to_omega_in_volt(sim_results[i][0][1])
+        if markers_for_sim_code[i] == 0:
+            ax.scatter(val_1, val_2, color='b')
+        if markers_for_sim_code[i] == 1:
+            ax.scatter(val_1, val_2, color='r')
+        if markers_for_sim_code[i] == 2:
+            ax.scatter(val_1, val_2, color='g')
+
+    return fig,ax
 
 def get_sim_results(simulation, phys_sim_params, plot_tr_params, units_translators):
     '''

@@ -4,6 +4,7 @@ import time
 
 import numpy as np
 import torch
+import pandas as pd
 
 import config
 from SearchAlg.genetic_alg_general_functions import get_L, GetPhysicalLoss
@@ -15,7 +16,7 @@ from FileSystem.storage import PStorage, SimResultsManager
 from CustomModels.my_models import DistrMaker
 from CustomModels.my_models import Integrator,renormolize_distribution
 import config
-from general import plot_policy_function, plot_trajectories,get_sim_results,plot_policy_function_with_trajectories
+from general import plot_policy_function, plot_trajectories,get_sim_results,plot_policy_function_with_trajectories,plot_trajectories_only
 from Simulation.sim_supp import make_psi, make_simulation_for_one_policy_function
 import sys
 from general_purpose_functions import time_mesuament
@@ -119,23 +120,37 @@ if __name__ == '__main__':
     a= [a[el].detach().numpy() for el in range(len(a))]
     for i in range(N):
         all_p[i] = renormolize_distribution(all_p[i],a,uniform_distrib_of_rules)
-    p_xi_eta_gamma = all_p[379]
-    alpha_ = [
-                0.0179218,  0.02384068, 0.03079365, 0.01711373, 0.0303054 , 0.01158957,
-                0.01653302, 0.02144654, 0.01060916, 0.03257249, 0.00106394, 0.02350237,
-                0.03501373, 0.03329102, 0.00978481, 0.00106394, 0.00106394, 0.00106394,
-                0.00106394, 0.03608664, 0.01993977, 0.01853709, 0.00106394, 0.00106394,
-                0.1373914,  0.00106394, 0.01246237, 0.01952362, 0.01698077, 0.01596703,
-                0.05169667, 0.02264178, 0.00106394, 0.02539518, 0.01851736, 0.02746313,
-                0.02853972, 0.03834083, 0.01366103, 0.00106394, 0.01850521, 0.00195201,
-                0.02592795, 0.00711466, 0.03754382, 0.04084063, 0.00863061, 0.00958083,
-                0.02180251]
-    fig0,ax0= plt.subplots()
-    ax0.bar(x= np.arange(0,49),height=alpha_)
-    plt.show()
+    # p_xi_eta_gamma = all_p[731] # best
+    p_xi_eta_gamma = all_p[877] # worst
+    # alpha_ = [
+    #             0.0179218,  0.02384068, 0.03079365, 0.01711373, 0.0303054 , 0.01158957,
+    #             0.01653302, 0.02144654, 0.01060916, 0.03257249, 0.00106394, 0.02350237,
+    #             0.03501373, 0.03329102, 0.00978481, 0.00106394, 0.00106394, 0.00106394,
+    #             0.00106394, 0.03608664, 0.01993977, 0.01853709, 0.00106394, 0.00106394,
+    #             0.1373914,  0.00106394, 0.01246237, 0.01952362, 0.01698077, 0.01596703,
+    #             0.05169667, 0.02264178, 0.00106394, 0.02539518, 0.01851736, 0.02746313,
+    #             0.02853972, 0.03834083, 0.01366103, 0.00106394, 0.01850521, 0.00195201,
+    #             0.02592795, 0.00711466, 0.03754382, 0.04084063, 0.00863061, 0.00958083,
+    #             0.02180251]
+    # fig0,ax0= plt.subplots()
+    # fig0.set_size_inches(4,3)
+    # ax0.bar(x= np.arange(0,49),height=alpha_)
+    # ax0.set_title(r'$P_{\gamma}(k)$')
+    # ax0.set_xlim(-1,50)
+    # ax0.set_xlabel(r'$k$')
 
-    print('norm of alpha', np.sum(alpha_))
-    p_xi_eta_gamma = renormolize_distribution(p_xi_eta_gamma,a,alpha_)
+    fig5,ax5 = plt.subplots()
+    fig5.set_size_inches(4,3)
+    table_ = pd.read_csv(os.path.join(config.task_dir, 'gradien_descent03_47_22.csv'))
+    ax5.plot(table_['Step'],table_['Value'])
+    ax5.yaxis.set_label_position("right")
+    ax5.yaxis.tick_right()
+    ax5.set_ylabel(r'$\mathcal{L}$')
+    ax5.yaxis.label.set_fontsize(20)
+    # plt.show()
+
+    # print('norm of alpha', np.sum(alpha_))
+    # p_xi_eta_gamma = renormolize_distribution(p_xi_eta_gamma,a,alpha_)
 
     # p_xi_eta_gamma = torch.load(config.inc_p0)
     # indexes_to_modify = np.concatenate([np.arange(start = 13, stop=35, dtype=np.uint32),
@@ -151,12 +166,13 @@ if __name__ == '__main__':
                                              print_time_of_this_func=False
                                               )
 
-    axs = plot_policy_function(mode_of_plot='map',
+    fig1,axs1 = plot_policy_function(mode_of_plot='map',
                          filepath_to_save_response_surface='',
                          p_func=p_func,
                          Grids=shared_integration_supports['Grids'],
                          block_canvas=False
                          )
+    fig1.set_size_inches(4,3)
     condition_of_break = np.asarray([
         config.theta_range,
         config.omega_range,
@@ -190,14 +206,19 @@ if __name__ == '__main__':
                             plot_tr_params=sym_params_,
                             units_translators=config.translators_units_of_measurement)
 
-
-
-
-    plot_trajectories(simulation=simulation,
+    fig3,ax3 = plot_trajectories_only(simulation=simulation,
                       phys_sim_params=config.phys_sim_params,
                       plot_tr_params=sym_params_,
                       units_translators=config.translators_units_of_measurement,
                       make_animation=False)
+
+
+    fig2,ax2 = plot_trajectories(simulation=simulation,
+                      phys_sim_params=config.phys_sim_params,
+                      plot_tr_params=sym_params_,
+                      units_translators=config.translators_units_of_measurement,
+                      make_animation=False)
+    fig2.set_size_inches(4,3)
     plt.show()
     # start_time = time.time()
     #

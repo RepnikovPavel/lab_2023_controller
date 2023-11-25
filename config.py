@@ -80,8 +80,8 @@ plot_trajectories_params = {
 descent_start_points_params = {
     'x_1_range': [-0.9, 0.9],
     'x_2_range': [-0.9, 0.9],
-    'n_x_for_sim': 10,  # число стартовых точек для симуляции
-    'n_y_for_sim': 10,  # число стартовых точек для симуляции
+    'n_x_for_sim': 5,  # число стартовых точек для симуляции
+    'n_y_for_sim': 5,  # число стартовых точек для симуляции
 }
 
 # plot_trajectories_params = {
