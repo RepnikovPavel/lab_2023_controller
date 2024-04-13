@@ -7,11 +7,13 @@ import os
 from Simulation.units import make_f_1_f_2_f_3
 from config_supports.config_fucntions import *
 
-tensorboard_path = r'C:\Python3\ml\Scripts\tensorboard.exe'
+tensorboard_path = r'/home/user/work/penv/bin/tensorboard'
 
 
+task_dir = r'/home/user/lab_2023_controller_data'
+if not os.path.exists(task_dir):
+    os.makedirs(task_dir)
 
-task_dir = r'C:\paper_data'
 p_0_for_mixture_path = os.path.join(task_dir, 'p0_for_mixture.txt')
 rules_cache_dir = os.path.join(task_dir,'rules_cache_dir')
 Phi_cache_dir = os.path.join(task_dir,'Phi_cache_dir')
