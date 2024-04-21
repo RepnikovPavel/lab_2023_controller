@@ -22,12 +22,19 @@ train_policy.ipynb
 построение алгоритма policy optimization    
 ___
 
+1.  
 create_Phi.py  
 построение множества решений Phi
 
+2.  
+make_graph.py  
+сделать матрицу смешности для множества решений  
+
+3.  
 make_vector_representation.ipynb  
 перевести решения в вектора  
 
+4.  
 descent_in_distrib_of_rules.ipynb  
 оптимизация на одном решении при варьировании распр. правил    
 descent_in_simplex_space.ipynb  

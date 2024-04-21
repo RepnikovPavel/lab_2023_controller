@@ -28,10 +28,10 @@ if __name__ == '__main__':
     N = 1000
     all_p = [torch.load(os.path.join(mg.cache_dir, 'distrib4D_{}.txt'.format(i))) for i in range(N)]
     nr = len(all_p[0].z_list)
-    uniform_distrib_of_rules= np.ones(shape=(nr,))/nr
+    # uniform_distrib_of_rules= np.ones(shape=(nr,))/nr
     a, h, f, coeff_list = mg.shared_data['ahfcoeff_list']
-    for i in range(N):
-        all_p[i] = renormolize_distribution(all_p[i],[a[el].detach().numpy() for el in range(len(a))],uniform_distrib_of_rules)
+    # for i in range(N):
+        # all_p[i] = renormolize_distribution(all_p[i],[a[el].detach().numpy() for el in range(len(a))],uniform_distrib_of_rules)
     
     adj_matrix = np.zeros(shape=(N, N))
     k_ = 0

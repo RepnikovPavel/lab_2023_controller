@@ -121,13 +121,22 @@ class GraphOnAPlane:
         self.out_pos = self.current_pos.cpu().detach().numpy()
     def get_pos(self):
         return self.out_pos
-    def plot_loss(self):
+    def plot_loss(self,rotation):
         fig,ax = plt.subplots()
         fig.set_size_inches(16,9)
         ax.plot(self.loss_vec)
         ax.set_yscale('log')
-        ax.set_title(r'$loss = \frac{1}{N(N-1)} \sum_{i}\sum_{j}(\rho_{ij}^{2}-d_{ij}^{2})^{2} \: during \: grad \: descent$')
-        plt.show()
+        ax.set_ylabel(r'$\frac{1}{N(N-1)} \sum_{i}\sum_{j}(\rho_{ij}^{2}-d_{ij}^{2})^{2}$')
+        ax.set_xlabel(r'$step$')
+        # ax.set_xlim([0,int(np.max(ax.get_xticks()))])
+        new_ticks = ax.get_xticks()
+        new_labels = ax.get_xticklabels()
+        neg_cnt = np.sum(ax.get_xticks()<0)
+        if neg_cnt > 0:
+            new_ticks = new_ticks[neg_cnt:]
+            new_labels = new_labels[neg_cnt:]
+        ax.set_xticks(new_ticks, new_labels, rotation=rotation, ha='right')
+        return fig,ax 
 
 # if __name__ == '__main__':
 
