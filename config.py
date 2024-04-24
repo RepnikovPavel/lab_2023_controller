@@ -16,8 +16,13 @@ task_dir = r'/home/user/lab_2023_controller_data'
 if not os.path.exists(task_dir):
     os.makedirs(task_dir)
 plots_path = os.path.join(task_dir, 'plots')
+plots_simplex_descent_path = os.path.join(task_dir, 'simplex_desc')
+
 if not os.path.exists(plots_path):
     os.makedirs(plots_path)
+
+if not os.path.exists(plots_simplex_descent_path):
+    os.makedirs(plots_simplex_descent_path)
     
 
 p_0_for_mixture_path = os.path.join(task_dir, 'p0_for_mixture.txt')
